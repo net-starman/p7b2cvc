@@ -1,0 +1,22 @@
+#!/bin/sh
+
+P7B=$1
+P7Bb=$(basename $P7B)
+CVC=$(echo $P7B | sed 's/\.p7b$/.cvc/')
+
+[ -f $P7B ] || exit 1
+[ -f $CVC ] && exit 1
+
+openssl pkcs7 -inform DER -print_certs -in $P7B -out /tmp/$P7Bb.cer
+openssl x509 -in /tmp/$P7Bb.cer -inform pem -out /tmp/$P7Bb.crt -outform der
+CERT=/tmp/$P7Bb.crt
+VAL1=`hexdump -v -e ' 2/1 "%02X" ' -n 254 $CERT | tr [:upper:] [:lower:]`
+VAL2=`hexdump -v -e ' 2/1 "%02X" ' -n 254 -s 254 $CERT | tr [:upper:] [:lower:]`
+VAL3=`hexdump -v -e ' 2/1 "%02X" ' -n 254 -s 508 $CERT | tr [:upper:] [:lower:]`
+VAL4=`hexdump -v -e ' 2/1 "%02X" ' -n 254 -s 762 $CERT | tr [:upper:] [:lower:]`
+echo $VAL1 >> $CVC
+echo $VAL2 >> $CVC
+echo $VAL3 >> $CVC
+echo $VAL4 >> $CVC
+rm -f /tmp/$P7Bb.cer /tmp/$P7Bb.crt
+
